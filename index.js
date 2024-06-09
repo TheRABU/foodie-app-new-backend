@@ -41,10 +41,44 @@ async function run() {
       .db("foodie-biteDB")
       .collection("ordersCollection");
 
-    app.get("/foods", async (req, res) => {
-      const result = await foodsCollection.find().toArray();
-      res.send(result);
+    app.get("/api/foods", async (req, res) => {
+      try {
+        const query = req.query.search;
+        let products;
+
+        if (query) {
+          products = await foodsCollection
+            .find({
+              $or: [
+                { FoodName: { $regex: query, $options: "i" } },
+                { RestaurantName: { $regex: query, $options: "i" } },
+              ],
+            })
+            .toArray();
+        } else {
+          products = await foodsCollection.find().toArray();
+        }
+        res.send(products);
+      } catch (error) {
+        console.error("Error occurred during search:", error);
+        res.status(500).json({ error: "Internal server error" });
+      }
     });
+    // app.get("/api/foods", async (req, res) => {
+    //   const query = req.query.search;
+    //   const products = await foodsCollection.find(query).toArray();
+    //   if (query) {
+    //     const filteredProducts = products.filter((product) =>
+    //       product.FoodName.includes(query)
+    //     );
+    //     res.send(filteredProducts);
+    //     return;
+    //   }
+
+    //   setTimeout(() => {
+    //     res.send(products);
+    //   }, 3000);
+    // });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
