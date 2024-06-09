@@ -1,5 +1,5 @@
 const express = require("express");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const cors = require("cors");
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
@@ -41,6 +41,11 @@ async function run() {
       .db("foodie-biteDB")
       .collection("ordersCollection");
 
+    // app.get("/api/foods", async (req, res) => {
+    //   const result = await foodsCollection.find().toArray();
+    //   res.send(result);
+    // });
+
     app.get("/api/foods", async (req, res) => {
       try {
         const query = req.query.search;
@@ -58,26 +63,31 @@ async function run() {
         } else {
           products = await foodsCollection.find().toArray();
         }
-        res.send(products);
+
+        res.json(products);
       } catch (error) {
         console.error("Error occurred during search:", error);
         res.status(500).json({ error: "Internal server error" });
       }
     });
+    app.get("/api/foods/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const findResult = await foodsCollection.findOne(query);
+      res.send(findResult);
+    });
     // app.get("/api/foods", async (req, res) => {
     //   const query = req.query.search;
-    //   const products = await foodsCollection.find(query).toArray();
-    //   if (query) {
-    //     const filteredProducts = products.filter((product) =>
-    //       product.FoodName.includes(query)
-    //     );
-    //     res.send(filteredProducts);
-    //     return;
+    //   let products;
+    //   try {
+    //     const regex = new RegExp(query, "i"); // i makes it case sensitive
+    //     const filter = await foodsCollection
+    //       .find({ FoodName: {$regex: query, $options: "i"}),
+    //       .toArray();
+    //     res.send(filter);
+    //   } catch (error) {
+    //     res.status(500).send({ error: "An error occurred while searching" });
     //   }
-
-    //   setTimeout(() => {
-    //     res.send(products);
-    //   }, 3000);
     // });
 
     // Send a ping to confirm a successful connection
