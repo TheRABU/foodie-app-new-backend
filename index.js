@@ -100,7 +100,7 @@ async function run() {
     app.post("/order", async (req, res) => {
       try {
         const order = req.body;
-        const { Quantity, Price, FoodName, orderQuantity } = order;
+        const { Price, FoodName, orderQuantity } = order;
         if (Price.length === 0 || Price.length < 0) {
           res.status(400).send("Invalid price");
         }
@@ -122,6 +122,15 @@ async function run() {
         res.json(result);
       } catch (error) {
         res.status(500).json({ error: error.message });
+      }
+    });
+    app.get("/myOrders/:email", async (req, res) => {
+      try {
+        const email = req.params.email;
+        const result = await orderCollection.find({ email: email }).toArray();
+        res.json(result);
+      } catch (error) {
+        res.status(400).json("Error occurred fetching your orders", error);
       }
     });
 
