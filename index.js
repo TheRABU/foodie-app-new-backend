@@ -172,6 +172,13 @@ async function run() {
       }
     });
 
+    app.post("/addRequest", async (req, res) => {
+      const request = req.body;
+
+      const result = await foodRequestCollection.insertOne(request);
+      res.send(result);
+    });
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
