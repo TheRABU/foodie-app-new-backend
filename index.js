@@ -179,6 +179,18 @@ async function run() {
       res.send(result);
     });
 
+    app.delete("/request/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const result = await foodRequestCollection.deleteOne({
+          _id: new ObjectId(id),
+        });
+        res.status(200).send(result);
+      } catch (error) {
+        res.status(403).send("Sorry Error occurred while fetching the request");
+      }
+    });
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
