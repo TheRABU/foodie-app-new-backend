@@ -133,6 +133,44 @@ async function run() {
         res.status(400).json("Error occurred fetching your orders", error);
       }
     });
+    app.delete("/order/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const order = await orderCollection.findOne({ _id: new ObjectId(id) });
+        const { FoodName, orderQuantity } = order;
+        if (!order) {
+          res.status(404).send("Order not found");
+        }
+        // first delete order
+        const deleteOrder = await orderCollection.deleteOne({
+          _id: new ObjectId(id),
+        });
+        if (deleteOrder.deletedCount === 1) {
+          // once again update the quantity
+          await foodsCollection.updateOne(
+            { FoodName: FoodName },
+            { $inc: { Quantity: +orderQuantity } }
+          );
+        }
+
+        res.status(200).send(deleteOrder);
+      } catch (error) {
+        res.status(500).send("Could not delete item", error);
+      }
+    });
+
+    // FOOD REQUEST COLLECTION RELATED
+    app.get("/myRequest/:email", async (req, res) => {
+      try {
+        const email = req.params.email;
+        const result = await foodRequestCollection
+          .find({ email: email })
+          .toArray();
+        res.status(200).send(result);
+      } catch (error) {
+        res.status(404).send("Could not find request", error);
+      }
+    });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
