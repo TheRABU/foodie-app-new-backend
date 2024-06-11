@@ -41,6 +41,14 @@ async function run() {
       .db("foodie-biteDB")
       .collection("ordersCollection");
 
+    const foodRequestCollection = conn
+      .db("foodie-biteDB")
+      .collection("foodRequestCollection");
+
+    const clientReviewCollection = conn
+      .db("foodie-biteDB")
+      .collection("clientReviewCollection");
+
     // app.get("/api/foods", async (req, res) => {
     //   const result = await foodsCollection.find().toArray();
     //   res.send(result);
@@ -89,6 +97,33 @@ async function run() {
     //     res.status(500).send({ error: "An error occurred while searching" });
     //   }
     // });
+    app.post("/order", async (req, res) => {
+      try {
+        const order = req.body;
+        const { Quantity, Price, FoodName, orderQuantity } = order;
+        if (Price.length === 0 || Price.length < 0) {
+          res.status(400).send("Invalid price");
+        }
+        const foodItem = await foodsCollection.findOne({ FoodName: FoodName });
+        if (!foodItem) {
+          return res.status(404).send({ message: "Food item not found" });
+        }
+        if (foodItem.Quantity < orderQuantity) {
+          return res
+            .status(400)
+            .send({ message: "Not enough quantity available" });
+        }
+
+        const result = await orderCollection.insertOne(order);
+        const updateQuantity = await foodsCollection.updateOne(
+          { FoodName: FoodName },
+          { $inc: { Quantity: -orderQuantity } }
+        );
+        res.json(result);
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
