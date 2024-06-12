@@ -45,6 +45,10 @@ async function run() {
       .db("foodie-biteDB")
       .collection("foodRequestCollection");
 
+    const foodReviewCollection = conn
+      .db("foodie-biteDB")
+      .collection("foodReviewCollection");
+
     const clientReviewCollection = conn
       .db("foodie-biteDB")
       .collection("clientReviewCollection");
@@ -191,6 +195,70 @@ async function run() {
       }
     });
 
+    // FOOD REVIEW COLLECTION RELATED
+    // app.post("/addFoodReview", async (req, res) => {
+    //   try {
+    //     const takenReview = req.body;
+    //     const { _id, foodName, userEmail, review, reviewRatings } = takenReview;
+
+    //     // find that item from foods collection based on id and food name
+    //     // const findRequestedItem = await foodsCollection.findOne({
+    //     //   _id: new ObjectId(_id),
+    //     //   FoodName: foodName,
+    //     // });
+    //     // if (!findRequestedItem) {
+    //     //   res.status(404).send("Food Not found");
+    //     // }
+    //     // then insert the review
+    //     const postReview = await foodReviewCollection.insertOne(takenReview);
+
+    //     // if (postReview.insertedId) {
+    //     //   const updateReviewInFood = await foodsCollection.updateOne(
+    //     //     { _id: new ObjectId(_id) },
+    //     //     { $push: { reviews: takenReview } }
+    //     //   );
+    //     //   res.status(200).json(postReview);
+    //     // } else {
+    //     //   res.status(500).send("Could not post and update sorry");
+    //     // }
+
+    //     // res.json(postReview)
+    //     res.send(postReview);
+    //   } catch (error) {
+    //     res.status(404).send("could not post at the moment");
+    //   }
+    // });
+    app.post("/addFoodReview", async (req, res) => {
+      try {
+        const takenReview = req.body;
+        const { _id, foodName } = takenReview;
+
+        // Find the item from the foods collection based on foodName and _id
+        const findRequestedItem = await foodsCollection.findOne({
+          _id: _id,
+          FoodName: foodName,
+        });
+        if (!findRequestedItem) {
+          return res.status(404).send("Food not found");
+        }
+
+        // Insert the review into the foodReviewCollection
+        const postReview = await foodReviewCollection.insertOne(takenReview);
+
+        if (postReview.insertedId) {
+          // Update the food item
+          const updateReviewInFood = await foodsCollection.updateOne(
+            { _id: _id },
+            { $push: { reviews: takenReview } }
+          );
+          res.status(200).json(postReview);
+        } else {
+          res.status(500).send("Could not post and update review");
+        }
+      } catch (error) {
+        res.status(500).send("Sorry, could not post at the moment");
+      }
+    });
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
