@@ -170,9 +170,9 @@ async function run() {
         const result = await foodRequestCollection
           .find({ email: email })
           .toArray();
-        res.status(200).send(result);
+        res.status(200).json(result);
       } catch (error) {
-        res.status(404).send("Could not find request", error);
+        res.status(404).json("Could not find request", error);
       }
     });
 
@@ -307,6 +307,31 @@ async function run() {
         const query = { food_id: req.params.foodId };
         const findItem = await foodReviewCollection.find(query).toArray();
         res.status(200).json(findItem);
+      } catch (error) {
+        res.status(500).json({ message: error.message });
+      }
+    });
+    // MY VERSION
+    app.delete("/myFoodReview/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
+        const findMyReview = await foodReviewCollection.deleteOne(query);
+        res.status(200).json(findMyReview);
+      } catch (error) {
+        res.status(500).json({
+          message: error.message,
+        });
+      }
+    });
+
+    app.get("/myFoodReview/:email", async (req, res) => {
+      try {
+        const email = req.params.email;
+        const result = await foodReviewCollection
+          .find({ userEmail: email })
+          .toArray();
+        res.json(result);
       } catch (error) {
         res.status(500).json({ message: error.message });
       }
