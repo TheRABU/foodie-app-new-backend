@@ -232,31 +232,48 @@ async function run() {
       try {
         const takenReview = req.body;
         const { _id, foodName } = takenReview;
-
         // Find the item from the foods collection based on foodName and _id
         const findRequestedItem = await foodsCollection.findOne({
-          _id: _id,
-          FoodName: foodName,
+          _id: new ObjectId(_id),
         });
         if (!findRequestedItem) {
-          return res.status(404).send("Food not found");
+          console.log("Food not found in foods collection Sorry!");
         }
-
-        // Insert the review into the foodReviewCollection
         const postReview = await foodReviewCollection.insertOne(takenReview);
-
+        console.log("Review Posted in foodReview Collection");
         if (postReview.insertedId) {
-          // Update the food item
-          const updateReviewInFood = await foodsCollection.updateOne(
-            { _id: _id },
-            { $push: { reviews: takenReview } }
+          // Update the food item to include the new review
+          // const convertTakenReview = Object.entries(takenReview);
+
+          // const updateReview = await foodsCollection.updateOne(
+          //   { _id: new ObjectId(_id) },
+          //   { $push: { reviews: takenReview } }
+          // );
+          const updateReview = await foodsCollection.findOneAndUpdate(
+            { _id: new ObjectId(_id) },
+            { $set: { $push: { reviews: takenReview } } }
           );
-          res.status(200).json(postReview);
+          console.log(
+            "updated the particular food in foods collection as well"
+          );
+          res.send(postReview);
         } else {
           res.status(500).send("Could not post and update review");
         }
       } catch (error) {
         res.status(500).send("Sorry, could not post at the moment");
+        console.error(error);
+      }
+    });
+
+    app.get("/foodReview/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
+        const findItem = await foodReviewCollection.findOne(query);
+        res.send(findItem);
+      } catch (error) {
+        res.send(error);
       }
     });
     // Send a ping to confirm a successful connection
