@@ -228,52 +228,87 @@ async function run() {
     //     res.status(404).send("could not post at the moment");
     //   }
     // });
+    // app.post("/addFoodReview", async (req, res) => {
+    //   try {
+    //     const takenReview = req.body;
+    //     const { _id, foodName } = takenReview;
+    //     // Find the item from the foods collection based on foodName and _id
+    //     const findRequestedItem = await foodsCollection.findOne({
+    //       _id: new ObjectId(_id),
+    //     });
+    //     if (!findRequestedItem) {
+    //       console.log("Food not found in foods collection Sorry!");
+    //     }
+    //     const postReview = await foodReviewCollection.insertOne(takenReview);
+    //     console.log("Review Posted in foodReview Collection");
+    //     if (postReview.insertedId) {
+    //       // Update the food item to include the new review
+    //       // const convertTakenReview = Object.entries(takenReview);
+
+    //       // const updateReview = await foodsCollection.updateOne(
+    //       //   { _id: new ObjectId(_id) },
+    //       //   { $push: { reviews: takenReview } }
+    //       // );
+    //       const updateReview = await foodsCollection.findOneAndUpdate(
+    //         { _id: new ObjectId(_id) },
+    //         { $set: { $push: { reviews: takenReview } } }
+    //       );
+    //       console.log(
+    //         "updated the particular food in foods collection as well"
+    //       );
+    //       res.send(postReview);
+    //     } else {
+    //       res.status(500).send("Could not post and update review");
+    //     }
+    //   } catch (error) {
+    //     res.status(500).send("Sorry, could not post at the moment");
+    //     console.error(error);
+    //   }
+    // });
+
+    // SIFATUL VERSION
     app.post("/addFoodReview", async (req, res) => {
       try {
-        const takenReview = req.body;
-        const { _id, foodName } = takenReview;
+        const reviewPayload = req.body;
+        const { _id, ...payload } = reviewPayload;
         // Find the item from the foods collection based on foodName and _id
         const findRequestedItem = await foodsCollection.findOne({
           _id: new ObjectId(_id),
         });
         if (!findRequestedItem) {
-          console.log("Food not found in foods collection Sorry!");
+          console.error("Food not found in foods collection Sorry!");
+          throw new Error("Food not found in foods collection Sorry!");
         }
-        const postReview = await foodReviewCollection.insertOne(takenReview);
-        console.log("Review Posted in foodReview Collection");
-        if (postReview.insertedId) {
-          // Update the food item to include the new review
-          // const convertTakenReview = Object.entries(takenReview);
-
-          // const updateReview = await foodsCollection.updateOne(
-          //   { _id: new ObjectId(_id) },
-          //   { $push: { reviews: takenReview } }
-          // );
-          const updateReview = await foodsCollection.findOneAndUpdate(
-            { _id: new ObjectId(_id) },
-            { $set: { $push: { reviews: takenReview } } }
-          );
-          console.log(
-            "updated the particular food in foods collection as well"
-          );
-          res.send(postReview);
-        } else {
+        const postReview = await foodReviewCollection.insertOne({
+          food_id: _id,
+          ...payload,
+        });
+        if (!postReview.insertedId) {
           res.status(500).send("Could not post and update review");
+          return;
         }
+
+        // const updatedFoodItem = await foodsCollection.findOneAndUpdate(
+        //   { _id: new ObjectId(_id) },
+        //   { $set: { reviews: undefined } },
+        //   { returnDocument: "after" },
+        // );
+        res.status(200).json(postReview);
       } catch (error) {
-        res.status(500).send("Sorry, could not post at the moment");
         console.error(error);
+        res.status(500).json({
+          message: "Sorry, could not post at the moment",
+        });
       }
     });
 
-    app.get("/foodReview/:id", async (req, res) => {
+    app.get("/foodReview/:foodId", async (req, res) => {
       try {
-        const id = req.params.id;
-        const query = { _id: new ObjectId(id) };
-        const findItem = await foodReviewCollection.findOne(query);
-        res.send(findItem);
+        const query = { food_id: req.params.foodId };
+        const findItem = await foodReviewCollection.find(query).toArray();
+        res.status(200).json(findItem);
       } catch (error) {
-        res.send(error);
+        res.status(500).json({ message: error.message });
       }
     });
     // Send a ping to confirm a successful connection
