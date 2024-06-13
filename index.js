@@ -336,6 +336,57 @@ async function run() {
         res.status(500).json({ message: error.message });
       }
     });
+
+    /// CLIENT REVIEW GALLERY RELATED
+    app.post("/clientReview", async (req, res) => {
+      try {
+        const payload = req.body;
+        const { name, email, reviewDescription, imgUrl } = payload;
+        // Basic validation
+        if (!name || !email || !reviewDescription || !imgUrl) {
+          return res.status(400).json("All fields are required.");
+        }
+
+        if (typeof name !== "string" || name.trim().length === 0) {
+          return res.status(400).json("Name must be a non-empty string.");
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+          return res.status(400).json("Invalid email format.");
+        }
+
+        if (
+          typeof reviewDescription !== "string" ||
+          reviewDescription.trim().length === 0
+        ) {
+          return res
+            .status(400)
+            .json("Review description must be a non-empty string.");
+        }
+
+        const urlRegex = /^(ftp|http|https):\/\/[^ "]+$/;
+        if (!urlRegex.test(imgUrl)) {
+          return res.status(400).json("Invalid image URL format.");
+        }
+        const result = await clientReviewCollection.insertOne({
+          name,
+          email,
+          reviewDescription,
+          imgUrl,
+        });
+        res.status(200).json(result);
+      } catch (error) {
+        console.error(error);
+        res.status(500).json("Sorry, can't process this request now.");
+      }
+    });
+
+    app.get("/allClientReviews", async (req, res) => {
+      const result = await clientReviewCollection.find().toArray();
+      res.json(result);
+    });
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
