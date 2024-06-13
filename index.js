@@ -341,7 +341,7 @@ async function run() {
     app.post("/clientReview", async (req, res) => {
       try {
         const payload = req.body;
-        const { name, email, reviewDescription, imgUrl } = payload;
+        const { name, email, reviewDescription, imgUrl, userProfile } = payload;
         // Basic validation
         if (!name || !email || !reviewDescription || !imgUrl) {
           return res.status(400).json("All fields are required.");
@@ -374,6 +374,7 @@ async function run() {
           email,
           reviewDescription,
           imgUrl,
+          userProfile,
         });
         res.status(200).json(result);
       } catch (error) {
