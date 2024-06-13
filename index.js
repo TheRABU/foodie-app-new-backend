@@ -11,6 +11,7 @@ const corsOptions = {
     "http://localhost:5173",
     "http://localhost:5174",
     "https://foodie-bite-server.vercel.app/",
+    "https://foodie-bite.web.app/",
   ],
   credentials: true,
   optionSuccessStatus: 200,
@@ -35,27 +36,23 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    const conn = await client.connect();
+    // const conn = await client.connect();
     // DB Collections
-    const foodsCollection = conn
-      .db("foodie-biteDB")
-      .collection("foodsCollection");
+    const foodsCollection = db("foodie-biteDB").collection("foodsCollection");
 
-    const orderCollection = conn
-      .db("foodie-biteDB")
-      .collection("ordersCollection");
+    const orderCollection = db("foodie-biteDB").collection("ordersCollection");
 
     const foodRequestCollection = conn
       .db("foodie-biteDB")
       .collection("foodRequestCollection");
 
-    const foodReviewCollection = conn
-      .db("foodie-biteDB")
-      .collection("foodReviewCollection");
+    const foodReviewCollection = db("foodie-biteDB").collection(
+      "foodReviewCollection"
+    );
 
-    const clientReviewCollection = conn
-      .db("foodie-biteDB")
-      .collection("clientReviewCollection");
+    const clientReviewCollection = db("foodie-biteDB").collection(
+      "clientReviewCollection"
+    );
 
     // app.get("/api/foods", async (req, res) => {
     //   const result = await foodsCollection.find().toArray();
@@ -393,10 +390,10 @@ async function run() {
     });
 
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
+    // await client.db("admin").command({ ping: 1 });
+    // console.log(
+    //   "Pinged your deployment. You successfully connected to MongoDB!"
+    // );
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
