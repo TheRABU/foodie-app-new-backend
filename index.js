@@ -10,13 +10,14 @@ const corsOptions = {
   origin: [
     "http://localhost:5173",
     "http://localhost:5174",
-    "https://foodie-bite-server.vercel.app/",
+    "https://foodie-bite.sifatulrabbi.com/",
     "https://foodie-bite.web.app/",
+    "https://foodie-app-backend-production.up.railway.app/",
   ],
   credentials: true,
   optionSuccessStatus: 200,
 };
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 // app.use(cookieParser());
 
@@ -63,7 +64,7 @@ async function run() {
     //   res.send(result);
     // });
 
-    app.get("/api/foods", async (req, res) => {
+    app.get("/api/foods", async (req, res, next) => {
       try {
         const query = req.query.search;
         let products;
@@ -83,15 +84,21 @@ async function run() {
 
         res.json(products);
       } catch (error) {
-        console.error("Error occurred during search:", error);
+        console.error("Error occurred during search:", error.message);
         res.status(500).json({ error: "Internal server error" });
+        next(error);
       }
     });
-    app.get("/api/foods/:id", async (req, res) => {
-      const id = req.params.id;
-      const query = { _id: new ObjectId(id) };
-      const findResult = await foodsCollection.findOne(query);
-      res.send(findResult);
+    app.get("/api/foods/:id", async (req, res, next) => {
+      try {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
+        const findResult = await foodsCollection.findOne(query);
+        res.send(findResult);
+      } catch (error) {
+        console.error(error.message);
+        next(error);
+      }
     });
     // app.get("/api/foods", async (req, res) => {
     //   const query = req.query.search;
@@ -106,7 +113,7 @@ async function run() {
     //     res.status(500).send({ error: "An error occurred while searching" });
     //   }
     // });
-    app.post("/order", async (req, res) => {
+    app.post("/order", async (req, res, next) => {
       try {
         const order = req.body;
         const { Price, FoodName, orderQuantity } = order;
@@ -131,18 +138,22 @@ async function run() {
         res.json(result);
       } catch (error) {
         res.status(500).json({ error: error.message });
+        next(error);
       }
     });
-    app.get("/myOrders/:email", async (req, res) => {
+    app.get("/myOrders/:email", async (req, res, next) => {
       try {
         const email = req.params.email;
         const result = await orderCollection.find({ email: email }).toArray();
         res.json(result);
       } catch (error) {
-        res.status(400).json("Error occurred fetching your orders", error);
+        res
+          .status(400)
+          .json("Error occurred fetching your orders", error.message);
+        next(error);
       }
     });
-    app.delete("/order/:id", async (req, res) => {
+    app.delete("/order/:id", async (req, res, next) => {
       try {
         const id = req.params.id;
         const order = await orderCollection.findOne({ _id: new ObjectId(id) });
@@ -164,12 +175,13 @@ async function run() {
 
         res.status(200).send(deleteOrder);
       } catch (error) {
-        res.status(500).send("Could not delete item", error);
+        res.status(500).send("Could not delete item", error.message);
+        next(error);
       }
     });
 
     // FOOD REQUEST COLLECTION RELATED
-    app.get("/myRequest/:email", async (req, res) => {
+    app.get("/myRequest/:email", async (req, res, next) => {
       try {
         const email = req.params.email;
         const result = await foodRequestCollection
@@ -178,17 +190,23 @@ async function run() {
         res.status(200).json(result);
       } catch (error) {
         res.status(404).json("Could not find request", error);
+        next(error);
       }
     });
 
-    app.post("/addRequest", async (req, res) => {
-      const request = req.body;
+    app.post("/addRequest", async (req, res, next) => {
+      try {
+        const request = req.body;
 
-      const result = await foodRequestCollection.insertOne(request);
-      res.send(result);
+        const result = await foodRequestCollection.insertOne(request);
+        res.send(result);
+      } catch (error) {
+        console.error(error.message);
+        next(error);
+      }
     });
 
-    app.delete("/request/:id", async (req, res) => {
+    app.delete("/request/:id", async (req, res, next) => {
       try {
         const id = req.params.id;
         const result = await foodRequestCollection.deleteOne({
@@ -196,7 +214,9 @@ async function run() {
         });
         res.status(200).send(result);
       } catch (error) {
+        console.error(error.message);
         res.status(403).send("Sorry Error occurred while fetching the request");
+        next(error);
       }
     });
 
@@ -272,7 +292,7 @@ async function run() {
     // });
 
     // SIFATUL VERSION
-    app.post("/addFoodReview", async (req, res) => {
+    app.post("/addFoodReview", async (req, res, next) => {
       try {
         const reviewPayload = req.body;
         const { _id, ...payload } = reviewPayload;
@@ -300,24 +320,27 @@ async function run() {
         // );
         res.status(200).json(postReview);
       } catch (error) {
-        console.error(error);
+        console.error(error.message);
         res.status(500).json({
           message: "Sorry, could not post at the moment",
         });
+        next(error);
       }
     });
 
-    app.get("/foodReview/:foodId", async (req, res) => {
+    app.get("/foodReview/:foodId", async (req, res, next) => {
       try {
         const query = { food_id: req.params.foodId };
         const findItem = await foodReviewCollection.find(query).toArray();
         res.status(200).json(findItem);
       } catch (error) {
+        console.error(error.message);
         res.status(500).json({ message: error.message });
+        next(error);
       }
     });
     // MY VERSION
-    app.delete("/myFoodReview/:id", async (req, res) => {
+    app.delete("/myFoodReview/:id", async (req, res, next) => {
       try {
         const id = req.params.id;
         const query = { _id: new ObjectId(id) };
@@ -327,10 +350,11 @@ async function run() {
         res.status(500).json({
           message: error.message,
         });
+        next(error);
       }
     });
 
-    app.get("/myFoodReview/:email", async (req, res) => {
+    app.get("/myFoodReview/:email", async (req, res, next) => {
       try {
         const email = req.params.email;
         const result = await foodReviewCollection
@@ -339,11 +363,12 @@ async function run() {
         res.json(result);
       } catch (error) {
         res.status(500).json({ message: error.message });
+        next(error);
       }
     });
 
     /// CLIENT REVIEW GALLERY RELATED
-    app.post("/clientReview", async (req, res) => {
+    app.post("/clientReview", async (req, res, next) => {
       try {
         const payload = req.body;
         const { name, email, reviewDescription, imgUrl, userProfile } = payload;
@@ -383,14 +408,20 @@ async function run() {
         });
         res.status(200).json(result);
       } catch (error) {
-        console.error(error);
+        console.error(error.message);
         res.status(500).json("Sorry, can't process this request now.");
+        next(error);
       }
     });
 
-    app.get("/allClientReviews", async (req, res) => {
-      const result = await clientReviewCollection.find().toArray();
-      res.json(result);
+    app.get("/allClientReviews", async (req, res, next) => {
+      try {
+        const result = await clientReviewCollection.find().toArray();
+        res.json(result);
+      } catch (error) {
+        console.error(error.message);
+        next(error);
+      }
     });
 
     // Send a ping to confirm a successful connection
