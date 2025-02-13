@@ -6,20 +6,6 @@ const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 const app = express();
 
-const corsOptions = {
-  origin: [
-    "http://localhost:5173",
-    "http://localhost:5174",
-    "https://foodie-bite.sifatulrabbi.com",
-    "https://foodie-bite.web.app",
-    "https://foodie-app-backend-production.up.railway.app",
-    "https://foodiebite-server-live.vercel.app",
-  ],
-  methods: "GET,POST,PUT,DELETE",
-  allowedHeaders: "Content-Type,Authorization",
-  credentials: true,
-  optionSuccessStatus: 200,
-};
 app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
