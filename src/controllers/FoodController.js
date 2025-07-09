@@ -3,20 +3,26 @@ import FoodRequest from "../models/FoodRequest.js";
 
 export const getFoods = async (req, res, next) => {
   try {
-    const search = req.query.search;
-    console.log(search);
-    let foods;
-
-    if (search) {
-      foods = await Food.find({
-        $or: [
-          { FoodName: { $regex: search, $options: "i" } },
-          { RestaurantName: { $regex: search, $options: "i" } },
-        ],
+    // const search = req.query?.search;
+    // console.log(search);
+    // let foods;
+    const foods = await Food.find();
+    if (!foods) {
+      return res.status(400).json({
+        success: false,
+        message: "Could not find foods sorry",
       });
-    } else {
-      foods = await Food.find();
     }
+    // if (search) {
+    //   foods = await Food.find({
+    //     $or: [
+    //       { FoodName: { $regex: search, $options: "i" } },
+    //       { RestaurantName: { $regex: search, $options: "i" } },
+    //     ],
+    //   });
+    // } else {
+    //   foods = await Food.find();
+    // }
 
     res.status(200).json(foods);
   } catch (error) {
