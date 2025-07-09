@@ -3,35 +3,49 @@ import FoodRequest from "../models/FoodRequest.js";
 
 export const getFoods = async (req, res, next) => {
   try {
-    // const search = req.query?.search;
-    // console.log(search);
-    // let foods;
-    const foods = await Food.find();
-    if (!foods) {
-      return res.status(400).json({
-        success: false,
-        message: "Could not find foods sorry",
+    const search =
+      typeof req.query.search === "string"
+        ? req.query.search.trim()
+        : undefined;
+
+    let foods = [];
+
+    // Edge Case 1: Search exists but is empty string or not valid
+    if (search && search.length > 0) {
+      foods = await Food.find({
+        $or: [
+          { FoodName: { $regex: search, $options: "i" } },
+          { RestaurantName: { $regex: search, $options: "i" } },
+        ],
+      });
+    } else {
+      // Edge Case 2: No search query
+      foods = await Food.find();
+    }
+
+    // Edge Case 3: No foods found (return empty array, not error)
+    if (!foods || foods.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: "No matching foods found",
+        foods: [],
       });
     }
-    res.status(201).json({
+
+    // Success
+    res.status(200).json({
       success: true,
-      message: "Fetched All foods from database",
+      message: "Fetched foods from database",
       foods,
     });
-    // if (search) {
-    //   foods = await Food.find({
-    //     $or: [
-    //       { FoodName: { $regex: search, $options: "i" } },
-    //       { RestaurantName: { $regex: search, $options: "i" } },
-    //     ],
-    //   });
-    // } else {
-    //   foods = await Food.find();
-    // }
-
-    res.status(200).json(foods);
   } catch (error) {
-    res.json({ message: "Error at foodsController::", details: error.message });
+    // Edge Case 4: Catch any unexpected error
+    console.error("Error in getFoods:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while fetching foods",
+      details: error.message,
+    });
     next(error);
   }
 };
