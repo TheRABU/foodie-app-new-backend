@@ -13,6 +13,11 @@ export const getFoods = async (req, res, next) => {
         message: "Could not find foods sorry",
       });
     }
+    res.status(201).json({
+      success: true,
+      message: "Fetched All foods from database",
+      foods,
+    });
     // if (search) {
     //   foods = await Food.find({
     //     $or: [
